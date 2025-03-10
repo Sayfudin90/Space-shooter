@@ -7,8 +7,8 @@ from os import path
 # Settings
 pygame.init()
 pygame.mixer.init()  # Sounds
-WIDTH = 480
-HEIGHT = 600
+WIDTH = 800
+HEIGHT = 800
 Screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Shooting Game!")
 clock = pygame.time.Clock()
@@ -21,41 +21,32 @@ RED = (255, 0, 0)
 GREEN = (0, 255, 0)
 BLUE = (0, 0, 255)
 YELLOW = (255, 255, 0)
-
+  
 # Images and Sounds
 game_folder = path.dirname(__file__)
 assets_folder = os.path.join(game_folder, "assets")
-
-# Load background image
 background = pygame.image.load(os.path.join(assets_folder, "space.jpg")).convert()
-background = pygame.transform.scale(background, (WIDTH, HEIGHT))
+
+
+# bullets and explosion images
+bullet_img = pygame.image.load(os.path.join(assets_folder, "bullets.png")).convert_alpha()
+explosion_img = pygame.image.load(os.path.join(assets_folder, "explosion.jpg")).convert_alpha()
 
 # Load player ship image
-# TODO: Download a spaceship image and place it in the assets folder
-# Example: Download from websites like https://opengameart.org (free game assets)
-# Uncomment this line and replace "ship.png" with your image filename:
-# player_img = pygame.image.load(os.path.join(assets_folder, "ship.png")).convert_alpha()
-# player_img = pygame.transform.scale(player_img, (50, 40))  # Adjust size as needed
+player_img = pygame.image.load(os.path.join(assets_folder, "space-shooter-ship.png")).convert_alpha()
+player_img = pygame.transform.scale(player_img, (50, 40))  # Adjust size as needed
 
-# For now, use a placeholder
-player_img = pygame.Surface((50, 40))
-player_img.fill(GREEN)
+meteor_original = pygame.image.load(os.path.join(assets_folder, "meteors.webp")).convert()
+bullet_img = pygame.image.load(os.path.join(assets_folder, "bullets.png")).convert_alpha()
+explosion_img = pygame.image.load(os.path.join(assets_folder, "explosion.jpg")).convert()
 
-# Load meteor (stone) images
-# TODO: Download stone/asteroid images and place them in the assets folder
-# Example: Download from websites like https://opengameart.org (free game assets)
-# Uncomment these lines and add your stone image filenames
+# Create different sized versions of the meteor
 meteor_img = []
-# for filename in ["stone1.png", "stone2.png", "stone3.png"]:
-#     img = pygame.image.load(os.path.join(assets_folder, filename)).convert_alpha()
-#     img = pygame.transform.scale(img, (30, 30))  # Adjust size as needed
-#     meteor_img.append(img)
-
-# For now, use placeholders
-for i in range(3):
-    surface = pygame.Surface((30, 30))
-    surface.fill(RED)
-    meteor_img.append(surface)
+for scale in [30, 25, 35]:  # Different sizes for variety
+    sized_meteor = pygame.transform.scale(meteor_original, (scale, scale))
+    # Make black background transparent (if needed)
+    sized_meteor.set_colorkey(BLACK)
+    meteor_img.append(sized_meteor)
 
 # Game Classes
 class Bullet(pygame.sprite.Sprite):
@@ -167,6 +158,8 @@ def check_collisions():
         m = Meteor()
         all_sprites.add(m)
         all_meteors.add(m)
+        global score
+        score += 10
     
     # Check if meteors hit player
     hits = pygame.sprite.spritecollide(player, all_meteors, True, pygame.sprite.collide_circle)
@@ -209,13 +202,7 @@ while running:
     all_sprites.update()
     
     # Check for collisions
-    old_meteor_count = len(all_meteors)
     check_collisions()
-    new_meteor_count = len(all_meteors)
-    
-    # Update score when meteor is destroyed by bullet
-    if old_meteor_count > new_meteor_count:
-        score += 10
     
     # End game if player health is depleted
     if player.health <= 0:
@@ -223,7 +210,7 @@ while running:
         running = False
     
     # Draw everything
-    Screen.blit(background, (0, 0))  # Draw background instead of filling with black
+    Screen.blit(background, (0, 0))  # Draw background
     all_sprites.draw(Screen)
     
     # Draw health bar
