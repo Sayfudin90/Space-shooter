@@ -33,19 +33,19 @@ bullet_img = pygame.image.load(os.path.join(assets_folder, "bullets.png")).conve
 explosion_img = pygame.image.load(os.path.join(assets_folder, "explosion.jpg")).convert_alpha()
 player_img = pygame.image.load(os.path.join(assets_folder, "space-shooter-ship.png")).convert_alpha()
 player_img = pygame.transform.scale(player_img, (50, 40))
-meteor_original = pygame.image.load(os.path.join(assets_folder, "meteors.webp")).convert()
+meteor_original = pygame.image.load(os.path.join(assets_folder, "meteors.png")).convert()
 
 # Load sound effects
 shoot_sound = pygame.mixer.Sound(os.path.join(assets_folder, "laser.wav"))
 explosion_sound = pygame.mixer.Sound(os.path.join(assets_folder, "explosion.wav"))
 
-# Inconsistent variable names (some with underscore, some without)
+#  variable names 
 bulletImg = pygame.image.load(os.path.join(assets_folder, "bullets.png")).convert_alpha()
 explosionImg = pygame.image.load(os.path.join(assets_folder, "explosion.jpg")).convert()
 
 # Create different meteor sizes - slightly irregular pattern
 meteor_img = []
-meteor_sizes = [30, 25, 35]  # extract to variable (human-like optimization)
+meteor_sizes = [20 , 25, 20] 
 for scale in meteor_sizes:
     sized_meteor = pygame.transform.scale(meteor_original, (scale, scale))
     sized_meteor.set_colorkey(BLACK)  # transparency
