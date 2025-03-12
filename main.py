@@ -1,21 +1,21 @@
 import pygame
-import time
-import random
-import os
-from os import path
-from functools import wraps
+import time  # for time delay and timestamps
+import random # random values for meteor mov't
+import os # for interaction with operating sysyem
+from os import path # file management
+from functools import wraps # for implementing decorators
 
 # Game settings
 pygame.init()
 pygame.mixer.init()  # for game sounds
-WIDTH = 500
+WIDTH = 480
 HEIGHT = 600
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption("Space Shooter!")
+pygame.display.set_caption("Space Shooter!") # title
 clock = pygame.time.Clock()
 FPS = 60
 
-# Some colors we'll use
+# Some colors we'll use(RGB values)
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 RED = (255, 0, 0)
@@ -26,54 +26,54 @@ YELLOW = (255, 255, 0)
 # Load assets
 game_folder = path.dirname(__file__)
 assets_folder = os.path.join(game_folder, "assets")
-background = pygame.image.load(os.path.join(assets_folder, "space.jpg")).convert()
+background = pygame.image.load(os.path.join(assets_folder, "space.jpg")).convert()# conversion for faster rendering
 
-# Load game images
-bullet_img = pygame.image.load(os.path.join(assets_folder, "bullets.png")).convert_alpha()
+# images
+bullet_img = pygame.image.load(os.path.join(assets_folder, "bullets.png")).convert_alpha() # optimizing transparecy for the images
 explosion_img = pygame.image.load(os.path.join(assets_folder, "explosion.jpg")).convert_alpha()
 player_img = pygame.image.load(os.path.join(assets_folder, "space-shooter-ship.png")).convert_alpha()
 player_img = pygame.transform.scale(player_img, (50, 40))
 meteor_original = pygame.image.load(os.path.join(assets_folder, "meteors.png")).convert()
 
-# Load sound effects
+# sound effects
 shoot_sound = pygame.mixer.Sound(os.path.join(assets_folder, "laser.wav"))
 explosion_sound = pygame.mixer.Sound(os.path.join(assets_folder, "explosion.wav"))
 
 #  variable names 
 bulletImg = pygame.image.load(os.path.join(assets_folder, "bullets.png")).convert_alpha()
-explosionImg = pygame.image.load(os.path.join(assets_folder, "explosion.jpg")).convert()
+explosionImg = pygame.image.load(os.path.join(assets_folder, "explosion.jpg")).convert() #.convert() to improve performance , same pixels as the screen
 
-# Create different meteor sizes - slightly irregular pattern
+# Create different meteor size
 meteor_img = []
-meteor_sizes = [20 , 25, 20] 
+meteor_sizes = [25 , 40, 15] 
 for scale in meteor_sizes:
     sized_meteor = pygame.transform.scale(meteor_original, (scale, scale))
     sized_meteor.set_colorkey(BLACK)  # transparency
     meteor_img.append(sized_meteor)
 
-# Custom decorators
+ #decorators
 def rate_limited(cooldown):
-    """Prevents a method from being called more than once per cooldown period"""
+    
     def decorator(func):
         last_time = {}  # different variable name than other decorators
-        @wraps(func) #  it ensures the decorated function retains data such as name of the original function 
+        @wraps(func) #   ensures the decorated function retains data such as name of the original function 
         def wrapper(self, *args, **kwargs): 
-            now = pygame.time.get_ticks()  # different variable name
+            now = pygame.time.get_ticks() 
             if self not in last_time or now - last_time[self] > cooldown * 1000:
                 last_time[self] = now
                 return func(self, *args, **kwargs)
         return wrapper
     return decorator
 
-# Different parameter name style in this decorator
+
 def keep_in_bounds(function):
-    """Keeps sprites within screen boundaries"""
+    
     @wraps(function)
     def wrapper(self, *args, **kwargs):
-        # Call original function first (different order than other decorators)
+    
         result = function(self, *args, **kwargs)
         
-        # Fix position after movement
+        
         if self.rect.right > WIDTH:
             self.rect.right = WIDTH
         if self.rect.left < 0:
@@ -81,40 +81,37 @@ def keep_in_bounds(function):
         return result
     return wrapper
 
-# Slightly inconsistent spacing in this decorator
+ #Controls sprite rotation timing#
 def rotate_sprite(ms=25):
-    """Controls sprite rotation timing"""
+    
     def decorator(func):
         last_time = {}
-        @wraps(func)
+        @wraps(func) # preserving metadata of the original functin data like(name)
         def wrapper(self, *args, **kwargs):
             t = pygame.time.get_ticks()
             
             if self not in last_time or t - last_time[self] > ms:
-                last_time[self] = t
-                return func(self, *args, **kwargs)
+                last_time[self] = t # updating the last recorded time 
+                return func(self, *args, **kwargs) # calling the original function
         return wrapper
     return decorator
 
 # Game Classes
 class Bullet(pygame.sprite.Sprite):
-    def __init__(self, x, y):
-        super().__init__()
-        # Simple rectangle bullet instead of using bullet_img - like a programmer
-        # who decided to simplify during development
+    def __init__(self, x, y): # x & y center of the ship
+        super().__init__() # initializing parent class functionality
         self.image = pygame.Surface((5, 10))
         self.image.fill(YELLOW)
         self.rect = self.image.get_rect()
         self.rect.centerx = x
         self.rect.bottom = y
-        self.speedy = -10  # slightly different naming convention
+        self.speedy = -10  # moving upwards
     
     def update(self):
         self.rect.y += self.speedy
-        # Different comment style here
-        # Delete bullet when it leaves screen
+      
         if self.rect.bottom < 0:
-            self.kill()
+            self.kill() # remove the bullet that goes of the screen
 
 class Explosion(pygame.sprite.Sprite):
     def __init__(self, center, size):
@@ -131,29 +128,29 @@ class Explosion(pygame.sprite.Sprite):
         if now - self.last_update > self.frame_rate:
             self.last_update = now
             self.frame += 1
-            if self.frame > 8:  # Assuming we have 8 frames of animation
+            if self.frame > 8: 
                 self.kill()
 
 class Player(pygame.sprite.Sprite):
     def __init__(self):
-        # No docstring here (inconsistent documentation)
+    
         super().__init__()
         self.image = player_img
         self.rect = self.image.get_rect()
         self.rect.centerx = WIDTH / 2
-        self.rect.bottom = HEIGHT - 10
-        self.speedx = 0  # different naming style than in Bullet class
+        self.rect.bottom = HEIGHT - 10 # placing the player near the bottom
+        self.speedx = 0  
         self.speed = 8
-        self._health = 100  # protected attribute
+        self._health = 100 
         
     # Property for health
     @property
     def health(self):
         return self._health
         
-    @health.setter
-    def health(self, val):  # different parameter name
-        # Clamp health between 0-100
+    @health.setter  
+    def health(self, val): 
+        
         if val > 100:
             self._health = 100
         elif val < 0:
@@ -161,8 +158,8 @@ class Player(pygame.sprite.Sprite):
         else:
             self._health = val
 
-    # Different decorator parameter than the definition (human error)
-    @rate_limited(0.2)
+    
+    @rate_limited(0.2) # prevents bullets being fired every 0.2sec
     def shoot_bullet(self):
         bullet = Bullet(self.rect.centerx, self.rect.top)
         all_bullets.add(bullet)
@@ -171,15 +168,15 @@ class Player(pygame.sprite.Sprite):
         
 
     def update(self):
-        self.move()  # renamed from movement() - like a refactoring a human might do
+        self.move()  
         
         # Check for spacebar to shoot
-        keys = pygame.key.get_pressed()  # different variable name than original
+        keys = pygame.key.get_pressed()  
         if keys[pygame.K_SPACE]:
             self.shoot_bullet()
     
     @keep_in_bounds
-    def move(self):
+    def move(self): # Ensure player stays within the screen boundary
         """Player movement with keyboard controls"""
         self.speedx = 0
         keys = pygame.key.get_pressed()
@@ -198,32 +195,31 @@ class Meteor(pygame.sprite.Sprite):
         super().__init__()
         
         # Visual setup
-        self.original_image = random.choice(meteor_img)
+        self.original_image = random.choice(meteor_img) # random meter size
         self.image = self.original_image.copy()
         self.rect = self.image.get_rect()
         
         # Physics attributes
         self.radius = int(self.rect.width * 0.85 / 2)
         self.rect.x = random.randrange(0, WIDTH - self.rect.width)
-        self.rect.y = random.randrange(-150, -100)
-        self.speedy = random.randrange(2, 8)  # different variable name style
-        self.speedx = random.randrange(-3, 3)  # different variable name style
+        self.rect.y = random.randrange(-150, -100) # starting off the screen
+        self.speedy = random.randrange(2, 8)  
+        self.speedx = random.randrange(-3, 3) 
         
         # Rotation attributes
-        self.rot = 0  # shortened variable name
+        self.rot = 0  
         self.rot_speed = random.randrange(3, 8)
     
-    @rotate_sprite(25)
+    @rotate_sprite(25) # rotation runs only every 25ms 
     def rotate(self):
-        """Rotate the meteor sprite"""
-        # Inconsistent variable name (rot vs rotation_degree)
+        
         self.rot = (self.rot + self.rot_speed) % 360
         center = self.rect.center  # different variable name
         self.image = pygame.transform.rotate(self.original_image, self.rot)
         self.rect = self.image.get_rect()
         self.rect.center = center
     
-    def reset(self):  # renamed method from spawn_new_meteor
+    def reset(self):
         """Reset meteor position when it goes off screen"""
         self.rect.x = random.randrange(0, WIDTH - self.rect.width)
         self.rect.y = random.randrange(-150, -100)
@@ -239,17 +235,17 @@ class Meteor(pygame.sprite.Sprite):
         # Rotate sprite
         self.rotate()
         
-        # Reset if out of bounds - slightly different logic/formatting
+    
         if (self.rect.top > HEIGHT or 
             self.rect.left > WIDTH + 20 or 
             self.rect.right < -20):
             self.reset()
     
     @classmethod
-    def create_many(cls, count, groups):
-        """Create multiple meteors at once - different method name"""
+    def create_many(cls, count, groups): # cls to instantiate objects of the class
+        
         meteors = []
-        # Explicit loop counter (i) that's unused - common in human code
+    
         for i in range(count):
             m = cls()
             for group in groups:
@@ -257,8 +253,8 @@ class Meteor(pygame.sprite.Sprite):
             meteors.append(m)
         return meteors
 
-# Collision checker with a different parameter style
-def check_collisions(game_sprites, bullets, meteors, p):  # p instead of player
+
+def check_collisions(game_sprites, bullets, meteors, player): 
     # Check if bullets hit meteors
     hits = pygame.sprite.groupcollide(meteors, bullets, True, True)
     for hit in hits:
@@ -276,8 +272,8 @@ def check_collisions(game_sprites, bullets, meteors, p):  # p instead of player
         global score
         score += 10
     
-    # Check if meteors hit player - slightly different collision parameters
-    hits = pygame.sprite.spritecollide(p, meteors, True, pygame.sprite.collide_circle)
+    
+    hits = pygame.sprite.spritecollide(player, meteors, True, pygame.sprite.collide_circle)
     for hit in hits:
         # Play explosion sound
         explosion_sound.play()
@@ -286,7 +282,7 @@ def check_collisions(game_sprites, bullets, meteors, p):  # p instead of player
         expl = Explosion(hit.rect.center, hit.rect.width * 2)
         game_sprites.add(expl)
         
-        p.health -= 20
+        player.health -= 20
         # Spawn replacement meteor 
         m = Meteor()
         game_sprites.add(m)
@@ -301,7 +297,6 @@ all_bullets = pygame.sprite.Group()
 player = Player()
 all_sprites.add(player)
 
-# Create meteors - using class method but with a slightly different name
 Meteor.create_many(8, [all_sprites, all_meteors])
 
 # Initialize score
@@ -322,24 +317,24 @@ while running:
     # Update all sprites
     all_sprites.update()
     
-    # Check for collisions - direct function call instead of decorator
+    
     check_collisions(all_sprites, all_bullets, all_meteors, player)
     
     # Check if game over
     if player.health <= 0:
-        print(f"Game Over! Final score: {score}")  # f-string instead of concatenation
+        print(f"Game Over! Final score: {score}") 
         running = False
     
-    # Draw / render everything
+
     screen.blit(background, (0, 0))
     all_sprites.draw(screen)
     
-    # Draw health bar with slightly different positioning
+
     pygame.draw.rect(screen, GREEN, (10, 10, player.health, 20))
     pygame.draw.rect(screen, WHITE, (10, 10, 100, 20), 2)
     
     # Draw score with slightly different positioning
-    score_text = font.render("Score: " + str(score), True, WHITE)  # string concat instead of f-string
+    score_text = font.render("Score: " + str(score), True, WHITE) 
     screen.blit(score_text, (WIDTH - 140, 10))
     
     # Update screen
